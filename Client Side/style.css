@@ -1,0 +1,10 @@
+body {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+#game-board {
+    border: 1px solid black;
+    background-color: black;
+}
