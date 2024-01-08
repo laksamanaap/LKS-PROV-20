@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,400i,500');
+
+body {
+  overflow-x: hidden;
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+}
+
+.core {
+  gap: 100px;
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  min-width: 250px;
+}
+
+.register {
+  margin: 0 auto;
+  max-width: 500px;
+}
+
+.register-card {
+  margin-top: 250px;
+}
+
+.register-card form {
+  padding: 24px;
+  border-radius: 16px;
+ box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
