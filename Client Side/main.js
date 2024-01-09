@@ -32,17 +32,26 @@ let ball = {
   velocityY: ballVelocityY,
 };
 
+let balls = [];
+
 let blockArray = [];
+let blockColorArray = ["red", "yellow", "green"];
 let blockWidth = 50;
-let blockHeight = 15;
+let blockHeight = 25;
 let blockColumn = 8;
 let blockRow = 3;
 let blockMaxsRow = 10;
 let blockCount = 0;
 
-//starting block corners top left
+let blockHitTwice = 0;
+let blockHitThird = 0;
+
+// starting block corners top left
 let blockX = 15;
 let blockY = 45;
+
+// score
+let score = 0;
 
 // When windown onload
 window.onload = function () {
@@ -115,18 +124,53 @@ const update = () => {
   for (let i = 0; i < blockArray.length; i++) {
     let block = blockArray[i];
     if (!block.break) {
-      if (topCollision(ball, block) || bottomCollision(ball, block)) {
-        block.break = true;
-        ball.velocityY *= -1;
-        blockCount -= 1;
-      } else if (leftCollision(ball, block) || rightCollision(ball, block)) {
-        block.break = true;
-        ball.velocityX *= -1;
-        blockCount -= 1;
+      let hitTopOrBottom =
+        topCollision(ball, block) || bottomCollision(ball, block);
+      let hitLeftOrRight =
+        leftCollision(ball, block) || rightCollision(ball, block);
+
+      if (hitTopOrBottom || hitLeftOrRight) {
+        if (block.strength === 1) {
+          // Red brick
+          block.break = true;
+          blockCount -= 1;
+          score += 1;
+        } else if (block.strength === 2) {
+          // Yellow brick
+          block.color = "yellow";
+          block.strength -= 1;
+          score += 2;
+        } else if (block.strength === 3) {
+          // Green Brick
+          block.strength -= 1;
+          score += 3;
+          block.color = "green";
+        }
+
+        ball.velocityY *= hitTopOrBottom ? -1 : 1;
+        ball.velocityX *= hitLeftOrRight ? -1 : 1;
       }
+
       // Draw Block
+      ctx.fillStyle = block.color;
       ctx.fillRect(block.x, block.y, block.width, block.height);
     }
+  }
+};
+
+// Create new ball
+const createNewBalls = (x, y) => {
+  for (let i = 0; i < 3; i++) {
+    let newBall = {
+      x: Math.random() * canvasWidth, // random x position within canvas width
+      y: Math.random() * canvasHeight, // random y position within canvas height
+      width: ballWidth,
+      height: ballHeight,
+      velocityX: ballVelocityX,
+      velocityY: -ballVelocityY,
+    };
+
+    balls.push(newBall);
   }
 };
 
@@ -185,15 +229,23 @@ const createBlocks = () => {
   blockArray = [];
   for (let i = 0; i < blockColumn; i++) {
     for (let j = 0; j < blockRow; j++) {
+      let strength = Math.floor(Math.random() * 3) + 1;
+      let color = strength === 1 ? "red" : strength === 2 ? "yellow" : "green";
+
       let block = {
-        x: blockX + i * blockWidth + i * 10, // Multiply 10?
+        x: blockX + i * blockWidth + i * 10,
         y: blockY + j * blockHeight + j * 10,
         width: blockWidth,
         height: blockHeight,
         break: false,
+        color: color,
+        strength: strength,
       };
+
       blockArray.push(block);
     }
   }
   blockCount = blockArray.length;
 };
+
+console.log(balls);
