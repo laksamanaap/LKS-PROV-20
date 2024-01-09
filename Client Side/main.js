@@ -2,16 +2,16 @@ let canvas;
 let canvasWidth = 500;
 let canvasHeight = 500;
 let ctx;
-let bottomCollision = 0;
+let bottomLine = 0;
 
 // Player
 let playerWidth = 80;
 let playerHeight = 10;
-let playerVelocityX = 15;
+let playerVelocityX = 20;
 
 let player = {
   x: canvasWidth / 2 - playerWidth / 2,
-  y: canvasHeight - playerHeight - 5,
+  y: canvasHeight - playerHeight - 7.5,
   width: playerWidth,
   height: playerHeight,
   velocityX: playerVelocityX,
@@ -32,6 +32,18 @@ let ball = {
   velocityY: ballVelocityY,
 };
 
+let blockArray = [];
+let blockWidth = 50;
+let blockHeight = 15;
+let blockColumn = 8;
+let blockRow = 3;
+let blockMaxsRow = 10;
+let blockCount = 0;
+
+//starting block corners top left
+let blockX = 15;
+let blockY = 45;
+
 // When windown onload
 window.onload = function () {
   canvas = document.getElementById("game-board");
@@ -45,6 +57,9 @@ window.onload = function () {
 
   requestAnimationFrame(update);
   document.addEventListener("keydown", movePlayer);
+
+  // Create Blocks
+  createBlocks();
 };
 
 // Update game loop
@@ -74,17 +89,43 @@ const update = () => {
   } else if (ball.y + ball.height >= canvasHeight) {
     // If the ball through the bottom of canvas
     ball.velocityY *= -1;
-    bottomCollision++;
-    console.log("Pass the bottom of canvas : ", bottomCollision);
+    bottomLine++;
+    console.log("Pass the bottom of canvas : ", bottomLine);
 
-    if (bottomCollision > 3) {
-      const userConfirm = window.confirm(
-        "Game Over!, do you want to restart the game?!"
-      );
+    // if (bottomCollision > 3) {
+    //   const userConfirm = window.confirm(
+    //     "Game Over!, do you want to restart the game?!"
+    //   );
 
-      if (userConfirm) {
-        window.location.reload();
+    //   if (userConfirm) {
+    //     window.location.reload();
+    //   }
+    // }
+  }
+
+  // Check Collision
+  if (topCollision(ball, player) || bottomCollision(ball, player)) {
+    ball.velocityY *= -1; // flip y
+  } else if (leftCollision(ball, player) || rightCollision(ball, player)) {
+    ball.velocityX *= -1;
+  }
+
+  // Blocks
+  ctx.fillStyle = "red";
+  for (let i = 0; i < blockArray.length; i++) {
+    let block = blockArray[i];
+    if (!block.break) {
+      if (topCollision(ball, block) || bottomCollision(ball, block)) {
+        block.break = true;
+        ball.velocityY *= -1;
+        blockCount -= 1;
+      } else if (leftCollision(ball, block) || rightCollision(ball, block)) {
+        block.break = true;
+        ball.velocityX *= -1;
+        blockCount -= 1;
       }
+      // Draw Block
+      ctx.fillRect(block.x, block.y, block.width, block.height);
     }
   }
 };
@@ -119,11 +160,40 @@ const detectCollision = (a, b) => {
     a.x < b.x + b.width && // a top left corner
     a.x + a.width > b.x && // a top right corner
     a.y < b.y + b.height && // a top left corner
-    a.y + a.height > b.y
-  ); // a bottom left corner
+    a.y + a.height > b.y // a bottom left corner
+  );
 };
 
 // Detect top collision
 const topCollision = (ball, block) => {
   return detectCollision(ball, block) && ball.y + ball.height >= block.y;
+};
+
+const bottomCollision = (ball, block) => {
+  return detectCollision(ball, block) && block.y + block.height >= ball.y;
+};
+
+const leftCollision = (ball, block) => {
+  return detectCollision(ball, block) && ball.x + ball.width >= block.x;
+};
+
+const rightCollision = (ball, block) => {
+  return detectCollision(ball, block) && block.x + block.width >= ball.x;
+};
+
+const createBlocks = () => {
+  blockArray = [];
+  for (let i = 0; i < blockColumn; i++) {
+    for (let j = 0; j < blockRow; j++) {
+      let block = {
+        x: blockX + i * blockWidth + i * 10, // Multiply 10?
+        y: blockY + j * blockHeight + j * 10,
+        width: blockWidth,
+        height: blockHeight,
+        break: false,
+      };
+      blockArray.push(block);
+    }
+  }
+  blockCount = blockArray.length;
 };
