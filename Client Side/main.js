@@ -212,6 +212,11 @@ const update = () => {
       ctx.fillRect(block.x, block.y, block.width, block.height);
     }
   }
+
+  // Display the score on the canvas
+  ctx.font = "20px Arial";
+  ctx.fillStyle = "white";
+  ctx.fillText("Score: " + score, 10, 30);
 };
 
 // Create new ball
