@@ -1,17 +1,21 @@
+let prabowo = document.getElementById("game-img");
+prabowo.style.display = "none ";
+
+let soundPlayed = false;
 let canvas;
-let canvasWidth = 500;
-let canvasHeight = 500;
+let canvasWidth = 750;
+let canvasHeight = 600;
 let ctx;
 let bottomLine = 0;
 
 // Player
-let playerWidth = 80;
+let playerWidth = 100;
 let playerHeight = 10;
 let playerVelocityX = 20;
 
 let player = {
   x: canvasWidth / 2 - playerWidth / 2,
-  y: canvasHeight - playerHeight - 7.5,
+  y: canvasHeight - playerHeight - 15,
   width: playerWidth,
   height: playerHeight,
   velocityX: playerVelocityX,
@@ -36,11 +40,10 @@ let balls = [];
 
 let blockArray = [];
 let blockColorArray = ["red", "yellow", "green"];
-let blockWidth = 50;
+let blockWidth = 30;
 let blockHeight = 25;
-let blockColumn = 8;
-let blockRow = 3;
-let blockMaxsRow = 10;
+let blockColumn = 15;
+let blockRow = 6;
 let blockCount = 0;
 
 let blockHitTwice = 0;
@@ -52,6 +55,7 @@ let blockY = 45;
 
 // score
 let score = 0;
+console.log(score);
 
 // When windown onload
 window.onload = function () {
@@ -85,6 +89,65 @@ const update = () => {
   ctx.arc(ball.x, ball.y, ball.width / 2, 0, 2 * Math.PI);
   ctx.fill();
 
+  // Draw Each Ball and Update Movement
+  balls.forEach((ball) => {
+    ball.x += ball.velocityX;
+    ball.y += ball.velocityY;
+
+    if (ball.y <= 0 || ball.y + ball.height >= canvasHeight) {
+      ball.velocityY *= -1;
+    }
+
+    if (ball.x <= 0 || ball.x + ball.width >= canvasWidth) {
+      ball.velocityX *= -1;
+    }
+
+    if (topCollision(ball, player) || bottomCollision(ball, player)) {
+      ball.velocityY *= -1;
+    } else if (leftCollision(ball, player) || rightCollision(ball, player)) {
+      ball.velocityX *= -1;
+    }
+
+    for (let j = 0; j < blockArray.length; j++) {
+      let block = blockArray[j];
+      if (!block.break) {
+        let hitTopOrBottom =
+          topCollision(ball, block) || bottomCollision(ball, block);
+        let hitLeftOrRight =
+          leftCollision(ball, block) || rightCollision(ball, block);
+
+        if (hitTopOrBottom || hitLeftOrRight) {
+          if (block.strength === 1) {
+            // Red brick
+            block.break = true;
+            blockCount -= 1;
+            score += 1;
+          } else if (block.strength === 2) {
+            // Yellow brick
+            block.color = "yellow";
+            block.strength -= 1;
+            score += 2;
+          } else if (block.strength === 3) {
+            // Green Brick
+            block.strength -= 1;
+            score += 3;
+            block.color = "green";
+          }
+
+          ball.velocityY *= hitTopOrBottom ? -1 : 1;
+          ball.velocityX *= hitLeftOrRight ? -1 : 1;
+        }
+      }
+    }
+
+    // Draw each ball
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.width / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.closePath();
+  });
+
   // Update ball position
   ball.x += ball.velocityX;
   ball.y += ball.velocityY;
@@ -100,16 +163,6 @@ const update = () => {
     ball.velocityY *= -1;
     bottomLine++;
     console.log("Pass the bottom of canvas : ", bottomLine);
-
-    // if (bottomCollision > 3) {
-    //   const userConfirm = window.confirm(
-    //     "Game Over!, do you want to restart the game?!"
-    //   );
-
-    //   if (userConfirm) {
-    //     window.location.reload();
-    //   }
-    // }
   }
 
   // Check Collision
@@ -133,17 +186,20 @@ const update = () => {
         if (block.strength === 1) {
           // Red brick
           block.break = true;
+          createNewBalls(ball.x, ball.y);
           blockCount -= 1;
           score += 1;
         } else if (block.strength === 2) {
           // Yellow brick
           block.color = "yellow";
           block.strength -= 1;
+          blockCount -= 1;
           score += 2;
         } else if (block.strength === 3) {
           // Green Brick
           block.strength -= 1;
           score += 3;
+          blockCount -= 1;
           block.color = "green";
         }
 
@@ -160,10 +216,20 @@ const update = () => {
 
 // Create new ball
 const createNewBalls = (x, y) => {
-  for (let i = 0; i < 3; i++) {
+  // Show Audio and prabowo only once
+  if (!soundPlayed) {
+    const audio = new Audio();
+    audio.src = "chipichipi.mp3";
+    audio.loop = true; // Set loop property to true
+    audio.play();
+    prabowo.style.display = "block";
+    soundPlayed = true;
+  }
+
+  for (let i = 0; i < 2; i++) {
     let newBall = {
-      x: Math.random() * canvasWidth, // random x position within canvas width
-      y: Math.random() * canvasHeight, // random y position within canvas height
+      x: Math.random() * x, // random x position within canvas width
+      y: Math.random() * y, // random y position within canvas height
       width: ballWidth,
       height: ballHeight,
       velocityX: ballVelocityX,
@@ -171,6 +237,7 @@ const createNewBalls = (x, y) => {
     };
 
     balls.push(newBall);
+    console.log(balls);
   }
 };
 
@@ -233,8 +300,8 @@ const createBlocks = () => {
       let color = strength === 1 ? "red" : strength === 2 ? "yellow" : "green";
 
       let block = {
-        x: blockX + i * blockWidth + i * 10,
-        y: blockY + j * blockHeight + j * 10,
+        x: blockX + i * blockWidth + i * 19,
+        y: blockY + j * blockHeight + j * 19,
         width: blockWidth,
         height: blockHeight,
         break: false,
@@ -247,5 +314,3 @@ const createBlocks = () => {
   }
   blockCount = blockArray.length;
 };
-
-console.log(balls);
